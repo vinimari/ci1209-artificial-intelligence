@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess A* Solver Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .board-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .board-wrapper {
+            position: relative;
+            background: #312e2b;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .coordinates {
+            display: flex;
+            justify-content: space-around;
+            color: #ddd;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .board {
+            display: grid;
+            gap: 0;
+            border: 3px solid #8b7355;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .board.problem1 {
+            grid-template-columns: repeat(6, 70px);
+            grid-template-rows: repeat(3, 70px);
+        }
+
+        .board.problem2 {
+            grid-template-columns: repeat(4, 70px);
+            grid-template-rows: repeat(4, 70px);
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .cell.light {
+            background: #f0d9b5;
+        }
+
+        .cell.dark {
+            background: #b58863;
+        }
+
+        .cell.border {
+            background: #8b7355;
+            cursor: not-allowed;
+        }
+
+        .cell.highlight {
+            box-shadow: inset 0 0 0 3px #ffd700;
+            animation: pulse 1s infinite;
+        }
+
+        .cell.from {
+            box-shadow: inset 0 0 0 3px #ff4444;
+        }
+
+        .cell.to {
+            box-shadow: inset 0 0 0 3px #44ff44;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: inset 0 0 0 3px #ffd700; }
+            50% { box-shadow: inset 0 0 0 5px #ffd700; }
+        }
+
+        .piece {
+            /* Alterado para uma transição específica de transformação */
+            transition: transform 0.4s ease-in-out;
+            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.5));
+            /* Adicionado para garantir o contexto de empilhamento correto */
+            position: relative;
+            cursor: grab;
+        }
+
+        .controls {
+            flex: 0 0 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 1.3em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-box p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        .move-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .move-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .move-item:hover {
+            background: #e9ecef;
+            border-left-color: #667eea;
+        }
+
+        .move-item.active {
+            background: #667eea;
+            color: white;
+            border-left-color: #ffd700;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-control input {
+            flex: 1;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-item span {
+            font-size: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .controls {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>♟️ Chess A* Solver Visualizer</h1>
+        <p>Visualização interativa dos movimentos do algoritmo A*</p>
+    </div>
+
+    <div class="main-content">
+        <div class="board-container">
+            <div class="board-wrapper">
+                <div id="board" class="board"></div>
+            </div>
+            <div class="coordinates" id="coordinates"></div>
+        </div>
+
+        <div class="controls">
+            <div class="card">
+                <h3>📋 Problema</h3>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="loadProblem(1)">Problema 1</button>
+                    <button class="btn-primary" onclick="loadProblem(2)">Problema 2</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎮 Controles</h3>
+                <div class="button-group">
+                    <button class="btn-success" onclick="play()" id="playBtn">▶️ Play</button>
+                    <button class="btn-danger" onclick="pause()" id="pauseBtn" disabled>⏸️ Pause</button>
+                    <button class="btn-warning" onclick="reset()">🔄 Reset</button>
+                </div>
+                <div class="button-group" style="margin-top: 10px;">
+                    <button class="btn-secondary" onclick="prevMove()">⏮️ Anterior</button>
+                    <button class="btn-secondary" onclick="nextMove()">Próximo ⏭️</button>
+                </div>
+
+                <div class="speed-control" style="margin-top: 15px;">
+                    <span>Velocidade:</span>
+                    <input type="range" min="1" max="10" value="5" id="speedSlider" onchange="updateSpeed()">
+                    <span id="speedValue">1x</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>ℹ️ Informações</h3>
+                <div class="info-box">
+                    <p><strong>Movimento:</strong> <span id="moveNum">0 / 0</span></p>
+                    <p><strong>Ação:</strong> <span id="moveDesc">-</span></p>
+                    <p><strong>Status:</strong> <span id="status">Carregue um problema</span></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📝 Carregar Solução</h3>
+                <textarea id="solutionInput" placeholder="Cole a solução aqui...&#10;Formato: <peça> <linha_orig> <col_orig> <linha_dest> <col_dest>&#10;Exemplo:&#10;t 2 6 3 6&#10;b 1 5 2 6"></textarea>
+                <button class="btn-primary" onclick="loadCustomSolution()" style="margin-top: 10px; width: 100%;">Carregar Solução</button>
+            </div>
+
+            <div class="card">
+                <h3>🎯 Movimentos</h3>
+                <div class="move-list" id="moveList"></div>
+            </div>
+
+            <div class="card">
+                <h3>🔤 Legenda</h3>
+                <div class="legend">
+                    <div class="legend-item"><span>♞</span> Cavalo Preto</div>
+                    <div class="legend-item"><span>♘</span> Cavalo Branco</div>
+                    <div class="legend-item"><span>♗</span> Bispo Branco</div>
+                    <div class="legend-item"><span>♖</span> Torre Branca</div>
+                    <div class="legend-item"><span>♙</span> Peão Branco</div>
+                    <div class="legend-item"><span>♕</span> Rainha Branca</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const PIECES = {
+        'k': '♞', // Cavalo preto
+        'c': '♘', // Cavalo branco
+        'b': '♗', // Bispo branco
+        't': '♖', // Torre branca
+        'p': '♙', // Peão branco
+        'q': '♕', // Rainha branca
+        '#': '▓', // Borda
+        '_': ''   // Vazio
+    };
+
+    const PIECE_NAMES = {
+        'k': 'Cavalo Preto',
+        'c': 'Cavalo Branco',
+        'b': 'Bispo Branco',
+        't': 'Torre Branca',
+        'p': 'Peão Branco',
+        'q': 'Rainha Branca'
+    };
+
+    let currentProblem = 0;
+    let currentBoard = [];
+    let initialBoard = [];
+    let moves = [];
+    let currentMoveIndex = -1;
+    let isPlaying = false;
+    let playInterval = null;
+    let speed = 1000;
+
+    // Novas variáveis para controlar a animação
+    let isAnimating = false;
+    let animationTimeout = null;
+    const ANIMATION_DURATION = 400; // Duração da animação em ms
+
+    const PROBLEM1 = {
+        rows: 3,
+        cols: 6,
+        initial: [
+            ['k', 'b', 'b', 'b', 'b', 't'],
+            ['c', 'c', 'c', 'c', 't', 't'],
+            ['#', '#', '#', '#', 't', '_']
+        ],
+        goal: {row: 2, col: 5, piece: 'k'}
+    };
+
+    const PROBLEM2 = {
+        rows: 4,
+        cols: 4,
+        initial: [
+            ['c', 'c', 'c', 'c'],
+            ['b', 'b', 'b', 'b'],
+            ['t', 't', 't', 't'],
+            ['_', '#', '#', 'p']
+        ],
+        goal: {row: 3, col: 0, piece: 'q'}
+    };
+
+    const EXAMPLE_SOLUTIONS = {
+        1: `t 2 6 3 6
+b 1 5 2 6
+c 2 3 1 5
+k 1 1 2 3
+k 2 3 3 5`,
+        2: `p 4 4 3 4
+p 3 4 2 4
+p 2 4 1 4
+q 1 4 4 1`
+    };
+
+    function loadProblem(num) {
+        reset();
+        currentProblem = num;
+        const problem = num === 1 ? PROBLEM1 : PROBLEM2;
+        initialBoard = JSON.parse(JSON.stringify(problem.initial));
+        currentBoard = JSON.parse(JSON.stringify(problem.initial));
+        moves = [];
+        currentMoveIndex = -1;
+
+        renderBoard();
+        updateInfo();
+
+        document.getElementById('solutionInput').value = EXAMPLE_SOLUTIONS[num];
+        loadCustomSolution();
+    }
+
+    function renderBoard() {
+        const board = document.getElementById('board');
+        const coords = document.getElementById('coordinates');
+        const problem = currentProblem === 1 ? PROBLEM1 : PROBLEM2;
+
+        board.className = `board problem${currentProblem}`;
+        board.innerHTML = '';
+        coords.innerHTML = '';
+
+        for (let i = 0; i < problem.rows; i++) {
+            for (let j = 0; j < problem.cols; j++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.row = i;
+                cell.dataset.col = j;
+
+                const piece = currentBoard[i][j];
+
+                if (piece === '#') {
+                    cell.classList.add('border');
+                } else {
+                    cell.classList.add((i + j) % 2 === 0 ? 'light' : 'dark');
+                }
+
+                if (PIECES[piece] && piece !== '_' && piece !== '#') {
+                    const pieceElem = document.createElement('span');
+                    pieceElem.className = 'piece';
+                    pieceElem.textContent = PIECES[piece];
+                    cell.appendChild(pieceElem);
+                }
+
+                board.appendChild(cell);
+            }
+        }
+
+        for (let j = 0; j < problem.cols; j++) {
+            const coord = document.createElement('div');
+            coord.textContent = j + 1;
+            coords.appendChild(coord);
+        }
+    }
+
+    function loadCustomSolution() {
+        const input = document.getElementById('solutionInput').value;
+        const lines = input.trim().split('\n');
+        moves = [];
+
+        for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            if (parts.length === 5) {
+                moves.push({
+                    piece: parts[0],
+                    from: {row: parseInt(parts[1]) - 1, col: parseInt(parts[2]) - 1},
+                    to: {row: parseInt(parts[3]) - 1, col: parseInt(parts[4]) - 1}
+                });
+            }
+        }
+
+        renderMoveList();
+        reset();
+    }
+
+    function renderMoveList() {
+        const list = document.getElementById('moveList');
+        list.innerHTML = '';
+
+        moves.forEach((move, index) => {
+            const item = document.createElement('div');
+            item.className = 'move-item';
+            item.textContent = `${index + 1}. ${PIECE_NAMES[move.piece]} ${move.from.row + 1},${move.from.col + 1} → ${move.to.row + 1},${move.to.col + 1}`;
+            item.onclick = () => goToMove(index);
+            list.appendChild(item);
+        });
+    }
+
+    function applyMove(move) {
+        if (isAnimating) return;
+
+        const fromCell = document.querySelector(`.cell[data-row='${move.from.row}'][data-col='${move.from.col}']`);
+        const toCell = document.querySelector(`.cell[data-row='${move.to.row}'][data-col='${move.to.col}']`);
+        const pieceEl = fromCell.querySelector('.piece');
+
+        if (!pieceEl) {
+            console.error("Peça não encontrada para animar:", move);
+            return;
+        }
+
+        isAnimating = true;
+
+        const deltaX = toCell.offsetLeft - fromCell.offsetLeft;
+        const deltaY = toCell.offsetTop - fromCell.offsetTop;
+
+        pieceEl.style.zIndex = 1000;
+        pieceEl.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+        highlightMove(move);
+
+        animationTimeout = setTimeout(() => {
+            const piece = currentBoard[move.from.row][move.from.col];
+            currentBoard[move.from.row][move.from.col] = '_';
+            let finalPiece = piece;
+
+            if (piece === 'p' && move.to.row === 0) {
+                finalPiece = 'q';
+            }
+            currentBoard[move.to.row][move.to.col] = finalPiece;
+
+            pieceEl.style.zIndex = 'auto';
+            pieceEl.style.transform = 'none';
+
+            if (finalPiece === 'q' && piece === 'p') {
+                pieceEl.textContent = PIECES['q'];
+            }
+
+            toCell.innerHTML = ''; // Limpa a casa de destino
+            toCell.appendChild(pieceEl);
+
+            isAnimating = false;
+        }, ANIMATION_DURATION);
+    }
+
+    function highlightMove(move) {
+        document.querySelectorAll('.cell.from, .cell.to').forEach(c => c.classList.remove('from', 'to'));
+
+        const fromCell = document.querySelector(`.cell[data-row='${move.from.row}'][data-col='${move.from.col}']`);
+        const toCell = document.querySelector(`.cell[data-row='${move.to.row}'][data-col='${move.to.col}']`);
+
+        if(fromCell) fromCell.classList.add('from');
+        if(toCell) toCell.classList.add('to');
+    }
+
+    function nextMove() {
+        if (isAnimating || currentMoveIndex >= moves.length - 1) {
+            if (currentMoveIndex === moves.length - 1) {
+                pause();
+                checkGoal();
+            }
+            return;
+        }
+
+        currentMoveIndex++;
+        applyMove(moves[currentMoveIndex]);
+        updateInfo();
+        updateMoveListHighlight();
+    }
+
+    // Funções que causam uma recriação total do tabuleiro (prev, goTo) precisam redesenhar o estado.
+    function prevMove() {
+        if (currentMoveIndex < 0) return;
+        pause(); // Pausa a reprodução automática
+
+        currentMoveIndex--;
+        currentBoard = JSON.parse(JSON.stringify(initialBoard));
+
+        for (let i = 0; i <= currentMoveIndex; i++) {
+            const move = moves[i];
+            const piece = currentBoard[move.from.row][move.from.col];
+            currentBoard[move.from.row][move.from.col] = '_';
+            currentBoard[move.to.row][move.to.col] = (piece === 'p' && move.to.row === 0) ? 'q' : piece;
+        }
+
+        renderBoard(); // Redesenha o tabuleiro no estado correto
+        if (currentMoveIndex >= 0) {
+            highlightMove(moves[currentMoveIndex]);
+        }
+        updateInfo();
+        updateMoveListHighlight();
+    }
+
+    function goToMove(index) {
+        pause(); // Pausa a reprodução automática
+        currentBoard = JSON.parse(JSON.stringify(initialBoard));
+
+        for (let i = 0; i <= index; i++) {
+            const move = moves[i];
+            const piece = currentBoard[move.from.row][move.from.col];
+            currentBoard[move.from.row][move.from.col] = '_';
+            currentBoard[move.to.row][move.to.col] = (piece === 'p' && move.to.row === 0) ? 'q' : piece;
+        }
+        currentMoveIndex = index;
+
+        renderBoard(); // Redesenha o tabuleiro no estado correto
+        highlightMove(moves[currentMoveIndex]);
+        updateInfo();
+        updateMoveListHighlight();
+    }
+
+
+    function play() {
+        if (isPlaying || moves.length === 0) return;
+
+        // Se estiver no final, resete para o início antes de tocar
+        if (currentMoveIndex === moves.length - 1) {
+            reset();
+        }
+
+        isPlaying = true;
+        document.getElementById('playBtn').disabled = true;
+        document.getElementById('pauseBtn').disabled = false;
+
+        // Função para executar um passo e agendar o próximo
+        const step = () => {
+            if (!isPlaying) return;
+
+            if (currentMoveIndex < moves.length - 1) {
+                nextMove();
+                playInterval = setTimeout(step, speed); // Usa setTimeout para o próximo passo
+            } else {
+                pause();
+                checkGoal();
+            }
+        };
+
+        step(); // Inicia o primeiro passo
+    }
+
+    function pause() {
+        isPlaying = false;
+        document.getElementById('playBtn').disabled = false;
+        document.getElementById('pauseBtn').disabled = true;
+        if (playInterval) {
+            clearTimeout(playInterval);
+            playInterval = null;
+        }
+    }
+
+    function reset() {
+        pause();
+        if (animationTimeout) {
+            clearTimeout(animationTimeout);
+            isAnimating = false;
+        }
+        currentMoveIndex = -1;
+        if (initialBoard.length > 0) {
+            currentBoard = JSON.parse(JSON.stringify(initialBoard));
+            renderBoard();
+        }
+        updateInfo();
+        updateMoveListHighlight();
+    }
+
+    function updateSpeed() {
+        const slider = document.getElementById('speedSlider');
+        const value = parseInt(slider.value);
+        // Garante que a velocidade não seja menor que a duração da animação + uma margem
+        speed = Math.max(ANIMATION_DURATION + 100, 2000 / value);
+        document.getElementById('speedValue').textContent = (value / 5).toFixed(1) + 'x';
+
+        // Reinicia o play para aplicar a nova velocidade
+        if (isPlaying) {
+            pause();
+            play();
+        }
+    }
+
+    function updateInfo() {
+        document.getElementById('moveNum').textContent = `${currentMoveIndex + 1} / ${moves.length}`;
+        const statusSpan = document.getElementById('status');
+
+        if (currentMoveIndex >= 0 && currentMoveIndex < moves.length) {
+            const move = moves[currentMoveIndex];
+            document.getElementById('moveDesc').textContent =
+                `${PIECE_NAMES[move.piece]} (${move.from.row + 1},${move.from.col + 1}) → (${move.to.row + 1},${move.to.col + 1})`;
+        } else {
+            document.getElementById('moveDesc').textContent = '-';
+        }
+
+        if (currentMoveIndex === -1 && moves.length > 0) {
+            statusSpan.textContent = '⏸️ Pronto';
+        } else if (isPlaying) {
+            statusSpan.textContent = '▶️ Em execução';
+        } else if (currentMoveIndex === moves.length - 1 && moves.length > 0) {
+            statusSpan.textContent = '✅ Concluído!';
+            checkGoal();
+        } else {
+            statusSpan.textContent = '⏸️ Pausado';
+        }
+    }
+
+    function updateMoveListHighlight() {
+        document.querySelectorAll('.move-item').forEach((item, index) => {
+            item.classList.toggle('active', index === currentMoveIndex);
+        });
+    }
+
+    function checkGoal() {
+        if (!currentProblem) return;
+        const problem = currentProblem === 1 ? PROBLEM1 : PROBLEM2;
+        const goalPiece = currentBoard[problem.goal.row][problem.goal.col];
+
+        if (goalPiece.toLowerCase() === problem.goal.piece.toLowerCase()) {
+            document.getElementById('status').textContent = '🎉 Objetivo alcançado!';
+            const goalCell = document.querySelector(`.cell[data-row='${problem.goal.row}'][data-col='${problem.goal.col}']`);
+            if (goalCell) goalCell.classList.add('highlight');
+        }
+    }
+
+    window.onload = () => {
+        loadProblem(1);
+        updateSpeed();
+    };
+</script>
+</body>
+</html>
