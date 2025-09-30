@@ -110,17 +110,22 @@
             cursor: not-allowed;
         }
 
+        /* Novo estilo para o ícone de cadeado */
+        .lock-icon {
+            font-size: 35px;
+            opacity: 0.5;
+            color: #f0d9b5; /* Cor clara para contrastar com o fundo escuro */
+        }
+
         .cell.highlight {
             box-shadow: inset 0 0 0 3px #ffd700;
             animation: pulse 1s infinite;
         }
 
-        .cell.from {
-            box-shadow: inset 0 0 0 3px #ff4444;
-        }
-
+        /* Ajustado para usar uma cor amarelada com transparência */
+        .cell.from,
         .cell.to {
-            box-shadow: inset 0 0 0 3px #44ff44;
+            background-color: rgba(255, 252, 126, 0.6);
         }
 
         @keyframes pulse {
@@ -129,10 +134,8 @@
         }
 
         .piece {
-            /* Alterado para uma transição específica de transformação */
             transition: transform 0.4s ease-in-out;
             filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.5));
-            /* Adicionado para garantir o contexto de empilhamento correto */
             position: relative;
             cursor: grab;
         }
@@ -417,7 +420,7 @@
         't': '♖', // Torre branca
         'p': '♙', // Peão branco
         'q': '♕', // Rainha branca
-        '#': '▓', // Borda
+        '#': '🔒', // Borda agora é um cadeado
         '_': ''   // Vazio
     };
 
@@ -439,10 +442,9 @@
     let playInterval = null;
     let speed = 1000;
 
-    // Novas variáveis para controlar a animação
     let isAnimating = false;
     let animationTimeout = null;
-    const ANIMATION_DURATION = 400; // Duração da animação em ms
+    const ANIMATION_DURATION = 400;
 
     const PROBLEM1 = {
         rows: 3,
@@ -513,17 +515,24 @@ q 1 4 4 1`
 
                 const piece = currentBoard[i][j];
 
+                // Define a cor de fundo da célula
                 if (piece === '#') {
                     cell.classList.add('border');
                 } else {
                     cell.classList.add((i + j) % 2 === 0 ? 'light' : 'dark');
                 }
 
-                if (PIECES[piece] && piece !== '_' && piece !== '#') {
-                    const pieceElem = document.createElement('span');
-                    pieceElem.className = 'piece';
-                    pieceElem.textContent = PIECES[piece];
-                    cell.appendChild(pieceElem);
+                // Adiciona o conteúdo (peça ou ícone)
+                if (PIECES[piece] && piece !== '_') {
+                    const contentElem = document.createElement('span');
+                    contentElem.textContent = PIECES[piece];
+
+                    if (piece === '#') {
+                        contentElem.className = 'lock-icon';
+                    } else {
+                        contentElem.className = 'piece';
+                    }
+                    cell.appendChild(contentElem);
                 }
 
                 board.appendChild(cell);
@@ -609,7 +618,7 @@ q 1 4 4 1`
                 pieceEl.textContent = PIECES['q'];
             }
 
-            toCell.innerHTML = ''; // Limpa a casa de destino
+            toCell.innerHTML = '';
             toCell.appendChild(pieceEl);
 
             isAnimating = false;
@@ -641,10 +650,9 @@ q 1 4 4 1`
         updateMoveListHighlight();
     }
 
-    // Funções que causam uma recriação total do tabuleiro (prev, goTo) precisam redesenhar o estado.
     function prevMove() {
         if (currentMoveIndex < 0) return;
-        pause(); // Pausa a reprodução automática
+        pause();
 
         currentMoveIndex--;
         currentBoard = JSON.parse(JSON.stringify(initialBoard));
@@ -656,7 +664,7 @@ q 1 4 4 1`
             currentBoard[move.to.row][move.to.col] = (piece === 'p' && move.to.row === 0) ? 'q' : piece;
         }
 
-        renderBoard(); // Redesenha o tabuleiro no estado correto
+        renderBoard();
         if (currentMoveIndex >= 0) {
             highlightMove(moves[currentMoveIndex]);
         }
@@ -665,7 +673,7 @@ q 1 4 4 1`
     }
 
     function goToMove(index) {
-        pause(); // Pausa a reprodução automática
+        pause();
         currentBoard = JSON.parse(JSON.stringify(initialBoard));
 
         for (let i = 0; i <= index; i++) {
@@ -676,8 +684,10 @@ q 1 4 4 1`
         }
         currentMoveIndex = index;
 
-        renderBoard(); // Redesenha o tabuleiro no estado correto
-        highlightMove(moves[currentMoveIndex]);
+        renderBoard();
+        if (currentMoveIndex >= 0) {
+            highlightMove(moves[currentMoveIndex]);
+        }
         updateInfo();
         updateMoveListHighlight();
     }
@@ -686,7 +696,6 @@ q 1 4 4 1`
     function play() {
         if (isPlaying || moves.length === 0) return;
 
-        // Se estiver no final, resete para o início antes de tocar
         if (currentMoveIndex === moves.length - 1) {
             reset();
         }
@@ -695,20 +704,19 @@ q 1 4 4 1`
         document.getElementById('playBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
 
-        // Função para executar um passo e agendar o próximo
         const step = () => {
             if (!isPlaying) return;
 
             if (currentMoveIndex < moves.length - 1) {
                 nextMove();
-                playInterval = setTimeout(step, speed); // Usa setTimeout para o próximo passo
+                playInterval = setTimeout(step, speed);
             } else {
                 pause();
                 checkGoal();
             }
         };
 
-        step(); // Inicia o primeiro passo
+        step();
     }
 
     function pause() {
@@ -734,16 +742,16 @@ q 1 4 4 1`
         }
         updateInfo();
         updateMoveListHighlight();
+        document.querySelectorAll('.cell.highlight').forEach(cell => cell.classList.remove('highlight'));
+        document.querySelectorAll('.cell.from, .cell.to').forEach(c => c.classList.remove('from', 'to'));
     }
 
     function updateSpeed() {
         const slider = document.getElementById('speedSlider');
         const value = parseInt(slider.value);
-        // Garante que a velocidade não seja menor que a duração da animação + uma margem
         speed = Math.max(ANIMATION_DURATION + 100, 2000 / value);
         document.getElementById('speedValue').textContent = (value / 5).toFixed(1) + 'x';
 
-        // Reinicia o play para aplicar a nova velocidade
         if (isPlaying) {
             pause();
             play();
