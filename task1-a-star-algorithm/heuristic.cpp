@@ -35,7 +35,7 @@ int Heuristic::problem2Heuristic(const ChessState& state, Position target, bool 
         for (int i = 0; i < state.rows; i++) {
             for (int j = 0; j < state.cols; j++) {
                 if (state.board[i][j] == 'q') {
-                    // Rainha pode mover-se em linha reta, então usamos distância Chebyshev
+                    // Rainha pode mover-se na diagonal, então usamos distância Chebyshev
                     return std::max(abs(i - target.row), abs(j - target.col));
                 }
             }
