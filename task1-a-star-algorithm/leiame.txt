@@ -1,0 +1,32 @@
+Aluno 1, GRR
+Ramon Pelle, GRR20244408
+Aluno 3, GRR
+
+> Organização do Código Fonte
+Seguimos a recomendação do professor e tentamos modularizar o máximo possível, evitando misturar a lógica do problema com a lógica do solver.
+
+- main.cpp: Classe principal da entrega, ela executa os métodos para resolver os dois problemas do trabalho e, em seguida, imprime as soluções encontradas no console.
+- astar_solver.cpp: Contém a implementação genérica do algoritmo A* e comporta as funções que configuram os problemas sugeridos no trabalho.
+- heuristic.cpp: Implementação das funções heurísticas.
+- chess_state.cpp: Define a representação de um estado do problema. Armazena o tabuleiro, os custos e o caminho de ações que levou a este estado. Inclui métodos para calcular o custo total e gerar os movimentos válidos para cada tipo de peça.
+- priority_queue.cpp: Um wrapper simples da fila de prioridades da STL.
+- types.cpp: Define estruturas de dados auxiliares usadas em todo o projeto..
+
+> Descrição Detalhada das Funções Heurísticas
+
+>> Problema 1
+- Heurística Utilizada: Distância de Manhattan dividida por 3.
+- Justificativa: A Distância de Manhattan calcula o número mínimo de passos em uma grade. Um cavalo move-se em "L", portanto em um movimento ele sempre altera sua posição em 1 unidade em um eixo e 2 no outro, totalizando uma mudança de 3 na Distância de Manhattan.Por conta disso, dividir a Distância de Manhattan total por 3 fornece uma estimativa aproximada e admissível do número mínimo de movimentos de cavalo necessários para cobrir essa distância. O termo + 2 no numerador é um fator de arredondamento para cima na divisão inteira, garantindo que a heurística seja mais precisa.
+
+>> Problema 2
+- Heurísticas Utilizadas: Distância de Manhattan + Distância de Chebyshev
+
+- 1: O peão ainda não foi promovido
+-- É calculada a Distância de Manhattan do peão até a casa de promoção. Como o peão só pode se mover para frente realizamos o cálculo padrão.
+
+- 2: O peão foi promovido a rainha
+-- A partir da casa de promoção, calcula-se a distância até o alvo final. Para a rainha, que se move em linhas retas e diagonais, a Distância de Chebyshev é a métrica perfeita, pois corresponde exatamente ao número mínimo de movimentos que uma rainha precisa para ir de um ponto a outro em um tabuleiro vazio.
+
+- A soma dessas duas distâncias é uma estimativa admissível do custo total, pois representa o custo de duas etapas sequenciais e obrigatórias do problema.
+
+
