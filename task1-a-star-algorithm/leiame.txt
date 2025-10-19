@@ -1,6 +1,6 @@
 Aluno 1, GRR
 Ramon Pelle, GRR20244408
-Aluno 3, GRR
+Pedro Pinheiro de Freitas Filho, GRR20232379
 
 > Organização do Código Fonte
 Seguimos a recomendação do professor e tentamos modularizar o máximo possível, evitando misturar a lógica do problema com a lógica do solver.
