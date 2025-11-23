@@ -1,3 +1,4 @@
+// modelo.h
 #ifndef MODELO_H
 #define MODELO_H
 
@@ -7,7 +8,9 @@
 
 using namespace std;
 
-// Estruturas básicas
+// ... (Coord e enum Piece permanecem iguais) ...
+
+// ... (Struct Move permanece igual) ...
 struct Coord {
     int r, c;
     bool operator==(const Coord& other) const;
@@ -24,13 +27,13 @@ struct Move {
     string toString(char mySide) const;
 };
 
-// Classe que representa o estado do jogo
 class BoardModel {
 private:
-    Piece tabuleiro[8][6]; // Indices 1..7, 1..5
+    Piece tabuleiro[8][6]; 
     int cachorrosPegos;
     map<int, vector<Coord>> adj; 
 
+    // Métodos privados auxiliares...
     int id(int r, int c) const;
     void initAdj();
     bool isPosicaoValida(int l, int c) const;
@@ -39,21 +42,19 @@ private:
 public:
     BoardModel();
     
-    // Parseia a string do servidor (com #) para a matriz interna
     void parseFromString(const char* str);
+    string toHashString() const; // Para evitar repetição
     
     Piece getElemento(int r, int c) const;
     int getCachorrosPegos() const;
     Coord getOncaPos() const;
     
-    // Gera movimentos
     void getOncaMovimentos(vector<Move>& movimentacoes) const;
     void getCachorroMovimentos(vector<Move>& moves) const;
     
-    // Aplica movimento
+    // --- MUDANÇAS AQUI ---
     void mover(const Move& m);
-    
-    // Verifica fim de jogo
+    void desfazer(const Move& m); // NOVO MÉTODO
     bool isFim(int& vencedor) const;
 };
 

@@ -2,11 +2,17 @@
 #include <sstream>
 #include <cstring>
 #include <cmath>
+#include <iostream>
+#include <string> // Necessário para to_string
 
-bool Coord::operator==(const Coord& other) const {
-    return r == other.r && c == other.c;
+using namespace std;
+
+// Implementação de Coord
+bool Coord::operator==(const Coord& other) const { 
+    return r == other.r && c == other.c; 
 }
 
+// Implementação de Move
 string Move::toString(char mySide) const {
     stringstream ss;
     ss << mySide << " "; 
@@ -22,6 +28,7 @@ string Move::toString(char mySide) const {
     return ss.str() + "\n"; 
 }
 
+// Implementação de BoardModel
 int BoardModel::id(int r, int c) const { return r * 10 + c; }
 
 bool BoardModel::isPosicaoValida(int l, int c) const {
@@ -54,20 +61,51 @@ void BoardModel::initAdj() {
 BoardModel::BoardModel() {
     initAdj();
     cachorrosPegos = 0;
+    for(int r=0; r<8; r++) for(int c=0; c<6; c++) tabuleiro[r][c] = VAZIO;
 }
 
+// Parse Robusto (Filtra caracteres ruins)
 void BoardModel::parseFromString(const char* str) {
     int cachorrosNoTabuleiro = 0;
-    for (int r = 1; r <= 7; ++r) {
-        for (int c = 1; c <= 5; ++c) {
-            int index = r * 8 + c; 
-            char ch = str[index];
-            if (ch == 'c') { tabuleiro[r][c] = CACHORRO; cachorrosNoTabuleiro++; }
-            else if (ch == 'o') tabuleiro[r][c] = ONCA;
-            else tabuleiro[r][c] = VAZIO;
+    int r = 1;
+    int c = 1;
+    int len = strlen(str);
+
+    for(int i=0; i<8; i++) for(int j=0; j<6; j++) tabuleiro[i][j] = VAZIO;
+
+    for (int i = 0; i < len; ++i) {
+        char ch = str[i];
+        if (ch == '#' || ch == '\n' || ch == ' ' || ch == '\r') continue;
+
+        if (r <= 7 && c <= 5) {
+            if (ch == 'c') {
+                tabuleiro[r][c] = CACHORRO;
+                cachorrosNoTabuleiro++;
+            } else if (ch == 'o') {
+                tabuleiro[r][c] = ONCA;
+            } else {
+                tabuleiro[r][c] = VAZIO;
+            }
+
+            c++;
+            if (c > 5) {
+                c = 1;
+                r++;
+            }
         }
     }
     cachorrosPegos = 14 - cachorrosNoTabuleiro;
+}
+
+// Implementação do Hash (A parte que faltava)
+string BoardModel::toHashString() const {
+    string s = "";
+    for(int r=1; r<=7; r++) {
+        for(int c=1; c<=5; c++) {
+            s += to_string(static_cast<int>(tabuleiro[r][c]));
+        }
+    }
+    return s;
 }
 
 Piece BoardModel::getElemento(int r, int c) const { return tabuleiro[r][c]; }
@@ -77,7 +115,7 @@ Coord BoardModel::getOncaPos() const {
     for(int r=1; r<=7; r++)
         for(int c=1; c<=5; c++)
             if(tabuleiro[r][c] == ONCA) return {r,c};
-    return {0,0};
+    return {0,0}; 
 }
 
 void BoardModel::buscaSaltos(Coord curr, Piece tabuleiroAux[8][6], vector<Coord>& caminho, vector<Move>& movimentacoes) const {
@@ -123,6 +161,8 @@ void BoardModel::buscaSaltos(Coord curr, Piece tabuleiroAux[8][6], vector<Coord>
 
 void BoardModel::getOncaMovimentos(vector<Move>& movimentacoes) const {
     Coord j = getOncaPos();
+    if (j.r == 0) return; 
+
     if (adj.count(id(j.r, j.c))) {
         for (auto n : adj.at(id(j.r, j.c))) {
             if (tabuleiro[n.r][n.c] == VAZIO) {
@@ -152,6 +192,7 @@ void BoardModel::getCachorroMovimentos(vector<Move>& moves) const {
     }
 }
 
+// Make Move
 void BoardModel::mover(const Move& m) {
     if (m.isSalto) {
         Coord curr = m.de;
@@ -168,6 +209,28 @@ void BoardModel::mover(const Move& m) {
         Piece p = tabuleiro[m.de.r][m.de.c];
         tabuleiro[m.de.r][m.de.c] = VAZIO;
         tabuleiro[m.para.r][m.para.c] = p;
+    }
+}
+
+// Unmake Move (Desfazer)
+void BoardModel::desfazer(const Move& m) {
+    if (m.isSalto) {
+        Coord ultimoDestino = m.caminhoSaltosMultiplos.back();
+        tabuleiro[ultimoDestino.r][ultimoDestino.c] = VAZIO;
+        tabuleiro[m.de.r][m.de.c] = ONCA;
+        
+        Coord curr = m.de;
+        for (const auto& dest : m.caminhoSaltosMultiplos) {
+            int midR = (curr.r + dest.r) / 2;
+            int midC = (curr.c + dest.c) / 2;
+            tabuleiro[midR][midC] = CACHORRO;
+            cachorrosPegos--;
+            curr = dest;
+        }
+    } else {
+        Piece p = tabuleiro[m.para.r][m.para.c];
+        tabuleiro[m.para.r][m.para.c] = VAZIO;
+        tabuleiro[m.de.r][m.de.c] = p;
     }
 }
 
