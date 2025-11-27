@@ -4,7 +4,6 @@ LDLIBS = -l hiredis -l readline
 
 all: controlador exemplo1 exemplo2 jogador_ia
 
-# --- Arquivos do Controlador e Exemplos (C) ---
 tabuleiro.o: tabuleiro.c tabuleiro.h
 	gcc -c tabuleiro.c $(CFLAGS)
 
@@ -16,8 +15,6 @@ exemplo1: tabuleiro.o exemplo1.c
 
 exemplo2: tabuleiro.o exemplo2.c
 	gcc $(CFLAGS) -o exemplo2 tabuleiro.o exemplo2.c $(LDLIBS)
-
-# --- Arquivos da sua IA Modularizada (C++) ---
 
 modelo.o: modelo.cpp modelo.h
 	g++ -c modelo.cpp $(CXXFLAGS)
@@ -31,7 +28,6 @@ ia.o: ia.cpp ia.h modelo.h heuristica.h
 main.o: main.cpp modelo.h ia.h tabuleiro.h
 	g++ -c main.cpp $(CXXFLAGS)
 
-# Linkagem final da IA
 jogador_ia: tabuleiro.o modelo.o heuristica.o ia.o main.o
 	g++ -o jogador_ia tabuleiro.o modelo.o heuristica.o ia.o main.o $(LDLIBS)
 

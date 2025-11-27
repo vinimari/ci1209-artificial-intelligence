@@ -1,63 +1,72 @@
-Conteúdo do pacote:
+================================================================================
+                                   JOGO DA ONÇA
 
-- tabuleiro.c e tabuleiro.h: biblioteca de funções para comunicação
-  como o controlador do tabuleiro via servidor redis
+Márcio Vinícius de Carvalho Marinho                GRR20204089
+Pedro Pinheiro de Freitas Filho                    GRR20232379
+Ramon Pelle                                        GRR20244408
+================================================================================
 
-- controlador.c: programa que controla o tabuleiro
 
-- exemplo1.c: programa exemplo comentado que usa as funções de
-  comunicação, conecta com o controlador, recebe o movimento do
-  adversário e o tabuleiro resultante e, envia para o controlador um
-  novo movimento
+O projeto foi estruturado utilizando a linguagem C++. A arquitetura foi dividida 
+nos seguintes arquivos:
 
-- exemplo2.c: programa exemplo que implenta um jogador interativo que
-  mostra na saída padrão os dados recebidos do controlador e espera na
-  entrada padrão uma nova jogada
+- main.cpp:
+  Gerencia a conexão com o servidor Redis, o loop principal de turnos,
+  o histórico de estados (para evitar repetição) e a  coordenação entre a
+  leitura do tabuleiro e a chamada da IA.
 
-- leiame.txt: este texto
+- modelo.h / modelo.cpp:
+  Responsável pela representação do estado do jogo.
 
-- makefile: compila os 3 programas anteriores
+- ia.h / ia.cpp:
+  Contém a lógica do algoritmo minimax
 
-- redis.conf: arquivo de configuração para ser usado com o servidor
-  redis
+- heuristica.h / heuristica.cpp:
+  Traduz o estado do tabuleiro em um valor numérico para guiar o Minimax.
 
-Para compilar e executar o controlador e os exemplos você precisa
-instalar os seguintes pacotes no seu sistema:
-- libreadline-dev
-- libhiredis-dev
-- redis-server
+- tabuleiro.c / tabuleiro.h (Fornecidos):
+  Biblioteca de comunicação com o controlador via Redis.
 
-Para preparar o seu jogador para se comunicar com o controlador do
-tabuleiro você deve alterar o seu programa para utilizar as funções
-que enviam e recebem dados do controlador. O exemplo1 pode ajudar
-nesta alteração.
+- makefile:
+  Script de compilação que gera o executável `jogador_ia`.
 
-Para testar o seu jogador você deve iniciar o servidor redis e
-executar o controlador.
+A variante utilizada foi o **Minimax com Poda Alfa-Beta** e profundidade fixa.
 
-Para iniciar o servidor redis nos sistemas do DInf execute em um
-terminal:
+A. Poda Alfa-Beta:
+   Utilizada para reduzir o espaço de busca, cortando ramos da árvore que não
+   influenciam a decisão final.
 
-   $ redis-server redis.conf
+B. Otimização de Memória:
+   Em vez de copiar o objeto do tabuleiro a cada nó da árvore, o algoritmo
+   passa uma única referência do tabuleiro e utiliza métodos `mover()`
+   e `desfazer()` para aplicar e reverter jogadas.
 
-Para iniciar o controlador execute em outro terminal:
+C. Ordenação de Movimentos:
+   Para a Onça, os movimentos são ordenados priorizando capturas (saltos). Isso
+   aumenta a probabilidade de encontrar bons movimentos cedo, maximizando a
+   eficiência da poda Alfa-Beta.
 
-   $ ./controlador o 50 0
+D. Detecção de Repetição (Histórico):
+   O algoritmo verifica se o estado resultante de um movimento já ocorreu
+   recentemente no histórico da partida. Se sim, aplica uma penalidade severa
+   na pontuação. Isso previne loops infinitos e empates por repetição.
 
-Este comando inicia o controlador indicando que o jogador que começa é
-o 'o' (onça), a partida terá 50 movimentos e não há limite de tempo
-para as jogadas. Para mais detalhes sobre os parâmetros do controlador
-execute:
 
-   $ ./controlador
+O sistema utiliza uma função de avaliação única para ambos os jogadores. 
+Fatores considerados:
 
-Para conectar duas instâncias do exemplo2 ao controlador, uma de cada
-lado do tabuleiro, execute em outros dois terminais os comandos:
+1. Captura: +2000 pontos por captura de cão, incentivando a onça capturar
+e os cães a sobreviverem.
 
-   $ ./exemplo2 o
+2. Mobilidade da Onça: +50 por movimento disponível, evitando levar a onça para
+lugares que será encurralada. Para os cães significa cercar a onça.
 
-   $ ./exemplo2 c
+3. Penalidade de recuo: -100 se a onça estiver nas linhas 5-7,  forçando ela
+a para o ataque
+ 
+4. Ruído: Um pequeno valor random para desempatar jogadas com a mesma pontuação 
+heurística, ajudando a evitar ciclos de repetição.
 
-Você pode testar o seu jogador jogando interativamente contra ele
-usando o exemplo2. Basta executar o seu jogador em um terminal e o
-exemplo2 em outro.
+- Para executar:
+  `make all`
+  `./jogador_ia <animal>`

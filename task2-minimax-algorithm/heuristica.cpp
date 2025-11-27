@@ -19,8 +19,8 @@ int evaluate(const BoardModel& tabuleiro) {
     Coord j = tabuleiro.getOncaPos();
     if (j.r >= 5) pontuacao -= 100;
 
-    // critério de desempate
-    pontuacao += (rand() % 10); 
+    // ruido de desempate
+    pontuacao += (rand() % 10);
 
     return pontuacao;
 }

@@ -8,11 +8,8 @@
 
 using namespace std;
 
-// ... (Coord e enum Piece permanecem iguais) ...
-
-// ... (Struct Move permanece igual) ...
 struct Coord {
-    int r, c;
+    int r, c; // row e column ;D
     bool operator==(const Coord& other) const;
 };
 
@@ -33,7 +30,6 @@ private:
     int cachorrosPegos;
     map<int, vector<Coord>> adj; 
 
-    // Métodos privados auxiliares...
     int id(int r, int c) const;
     void initAdj();
     bool isPosicaoValida(int l, int c) const;
@@ -43,7 +39,7 @@ public:
     BoardModel();
     
     void parseFromString(const char* str);
-    string toHashString() const; // Para evitar repetição
+    string toHashString() const;
     
     Piece getElemento(int r, int c) const;
     int getCachorrosPegos() const;
@@ -52,9 +48,8 @@ public:
     void getOncaMovimentos(vector<Move>& movimentacoes) const;
     void getCachorroMovimentos(vector<Move>& moves) const;
     
-    // --- MUDANÇAS AQUI ---
     void mover(const Move& m);
-    void desfazer(const Move& m); // NOVO MÉTODO
+    void desfazer(const Move& m);
     bool isFim(int& vencedor) const;
 };
 

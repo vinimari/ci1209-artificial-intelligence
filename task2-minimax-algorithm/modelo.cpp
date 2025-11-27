@@ -3,16 +3,14 @@
 #include <cstring>
 #include <cmath>
 #include <iostream>
-#include <string> // Necessário para to_string
+#include <string>
 
 using namespace std;
 
-// Implementação de Coord
 bool Coord::operator==(const Coord& other) const { 
     return r == other.r && c == other.c; 
 }
 
-// Implementação de Move
 string Move::toString(char mySide) const {
     stringstream ss;
     ss << mySide << " "; 
@@ -28,7 +26,6 @@ string Move::toString(char mySide) const {
     return ss.str() + "\n"; 
 }
 
-// Implementação de BoardModel
 int BoardModel::id(int r, int c) const { return r * 10 + c; }
 
 bool BoardModel::isPosicaoValida(int l, int c) const {
@@ -64,7 +61,6 @@ BoardModel::BoardModel() {
     for(int r=0; r<8; r++) for(int c=0; c<6; c++) tabuleiro[r][c] = VAZIO;
 }
 
-// Parse Robusto (Filtra caracteres ruins)
 void BoardModel::parseFromString(const char* str) {
     int cachorrosNoTabuleiro = 0;
     int r = 1;
@@ -97,7 +93,6 @@ void BoardModel::parseFromString(const char* str) {
     cachorrosPegos = 14 - cachorrosNoTabuleiro;
 }
 
-// Implementação do Hash (A parte que faltava)
 string BoardModel::toHashString() const {
     string s = "";
     for(int r=1; r<=7; r++) {
@@ -192,7 +187,6 @@ void BoardModel::getCachorroMovimentos(vector<Move>& moves) const {
     }
 }
 
-// Make Move
 void BoardModel::mover(const Move& m) {
     if (m.isSalto) {
         Coord curr = m.de;
@@ -212,7 +206,6 @@ void BoardModel::mover(const Move& m) {
     }
 }
 
-// Unmake Move (Desfazer)
 void BoardModel::desfazer(const Move& m) {
     if (m.isSalto) {
         Coord ultimoDestino = m.caminhoSaltosMultiplos.back();
