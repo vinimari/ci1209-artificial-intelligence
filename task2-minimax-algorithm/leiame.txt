@@ -69,4 +69,4 @@ heurística, ajudando a evitar ciclos de repetição.
 
 - Para executar:
   `make all`
-  `./jogador_ia <animal>`
+  `./jogador_ia <animal>` ('o' para onça, 'c' para cão)
