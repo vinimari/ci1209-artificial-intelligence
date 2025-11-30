@@ -79,4 +79,9 @@ heurística, ajudando a evitar ciclos de repetição.
    Compilar o código:
   `make all`
   `./controlador o 100 0`
-  `./jogador_ia <animal>` ('o' para onça, 'c' para cão)
+
+   Criar Jogadores
+   Onça 
+   `./jogador_ia o` 
+   Cachorro
+   `./jogador_ia c` 
