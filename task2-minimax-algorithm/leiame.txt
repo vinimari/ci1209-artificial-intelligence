@@ -68,5 +68,15 @@ a para o ataque
 heurística, ajudando a evitar ciclos de repetição.
 
 - Para executar:
+   Instalar dependências:
+   sudo apt update
+   sudo apt install libhiredis-dev libreadline-dev
+   sudo apt install redis-server
+
+   Iniciar o servidor Redis:
+  `redis-server redis.conf`
+
+   Compilar o código:
   `make all`
+  `./controlador o 100 0`
   `./jogador_ia <animal>` ('o' para onça, 'c' para cão)
